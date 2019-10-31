@@ -23,7 +23,6 @@ def rm_ref_gaps(entry_obj):
 """
 Outputs list of positions that are different between alignments in dictionary: {genomic_position:(ref_bp, align_bp)}
 Assumes gaps filtered from ref. If not, will filter gaps from ref.
-NEED W/IN SPECIES VARIANT DATA TO PROCEED W/ DIVERGENCE CALCULATIONS
 """
 
 def get_divergence(entry_obj):
@@ -40,7 +39,6 @@ def get_divergence(entry_obj):
 Obtains list of variant positions from VCF
 Assumes that VCF contains only variant sites, no indels, chromosome 
 mouse -- sites polymorphic in any three populations
-rat -- find suitable VCF
 """  
 
 def scrape_vcf(VCF_path, chr):
@@ -212,7 +210,7 @@ def pool_entries(atx_obj, int_start, int_end, remove = False):
     entries_in_interval = {}
     rm_ls = []
     key_ls = list(atx_obj.entries.keys()) #need to do this b/c dictionary size changes during loop
-    for i in key_ls:  #PROBLEM LINE
+    for i in key_ls:
         curr_ent = rm_ref_gaps(atx_obj.get_entry(i))
         #if an entry begins after interval start
         if curr_ent.ref_start > int_start and curr_ent.ref_start < int_end:
