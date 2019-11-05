@@ -1,5 +1,4 @@
 library(ggplot2)
-setwd('/home/mikey/projects/mmdom_linked_selection/')
 ##Spearman correlations
 #load data
 #france
