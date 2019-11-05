@@ -1,9 +1,6 @@
 """
 Script computing nucleotide diversity over a range of window sizes
 Input file is an Unzipped VCF, containing exclusively individuals to be considered for analysis
-
-Current error: for first 2.5kb window, not all 11 snps are used (resfile showing only 8).
-See how '.' for missing data is handled by nuc_divers.
 """
 import time
 import sys
@@ -16,7 +13,6 @@ class big_chunk():
 
 #Function to pull list of transcribed sites in an interval from a gene table
 #Use inside of grab_chunk
-##CONVERT ALL INSTANCES OF LINE[X] TO INT
 def get_tx_win(path, start, stop, chr):
     tx_start = 0
     tx_end = 0
@@ -57,7 +53,6 @@ def get_tx_win(path, start, stop, chr):
     return(pos_lis)
 
 #Function to grab 5Mb from VCF
-#ADJUST TO RETURN CLASS big_chunk(), as to avoid redundant looping over vcf
 def grab_chunk(path, start, stop, chr, exclude_tx = False, g_table_path = ''):
     #if excluding tx sites, start by retrieving list of transcribed sites
     if exclude_tx is True:
@@ -93,7 +88,7 @@ def grab_chunk(path, start, stop, chr, exclude_tx = False, g_table_path = ''):
                     else:
                         geno_lis = line[9:]
                         #tidy up genotype list
-                        #also split on '/' before appending to haplotye list
+                        #also split on '/' before appending to haplotype list
                         haplo_lis_append = []
                         for i in geno_lis:
                             haplo_lis_append.extend(i.split(':')[0].split('/'))
@@ -151,7 +146,7 @@ def count_miss_rm(haplo_lis, haplo):
     return(miss_num)
 
 #Function to count number of pairwise differences for a single site
-#returns a tuple of (diff_count, num_pairwise_comparisons)
+#returns a tuple (diff_count, num_pairwise_comparisons)
 def site_pair_diff(snp_lis, exclude_tx_miss = True):
     diff_count = 0
     num_pairwise_comparisons = 0
@@ -209,16 +204,14 @@ def subset_haplo_obj(haplo_obj, start, stop):
     #get minimum and maximum positions in haplo_obj.snp_pos_lis that are within defined interval boundaries
     start_counter = 0
     #index sometimes out of range for below line
-    #when if the defined window tries to start past the snp position list, will throw an error.
+    #if the defined window tries to start past the snp position list, will throw an error.
     #need to return zeros for when this happens
     try:
         while haplo_obj.snp_pos_lis[start_counter] < start:
             start_counter += 1
     except IndexError: #error when loop tries to start at a position past the furthest snp, return zeros
-        #I think the line below is where the weird post-TX region 0s are coming from.
         sub_haplo_obj = big_chunk(snp_pos_lis = [], haplo_lis = [])
         return(sub_haplo_obj)
-        #unsure if I can exit function this way? -- appears OK
         exit()
     stop_counter = start_counter
     try:
@@ -241,7 +234,7 @@ def get_nuc_divers(path, start, stop, chr, g_table_path = '', mult_wins = False,
     start_time = time.time()
     #get snp chunk from VCF
     haplo_obj = grab_chunk(path = path, start = start, stop = stop, chr = chr, exclude_tx = True, g_table_path = g_table_path)
-    #for now, don't include code to remove missing missing data
+    #don't include code to remove missing missing data
     diff_counts = sum_pair_diff(haplo_lis = haplo_obj.haplo_lis)
     #Return a single value if not computing for multiple window sizes
     if mult_wins is False:
@@ -270,10 +263,6 @@ def get_nuc_divers(path, start, stop, chr, g_table_path = '', mult_wins = False,
             #compute number of sub-windows
             win_num = int((stop - start + 1) / win_size)
             #compute nucleotide diversity for each sub-window
-            #looped haplo_obj subsetting broken? it looks like each window is assigned either the same (unsubsetted) haplo_obj or the same sub_pos_diff_dict. check.
-            #the subsetting function appears to be working. make sure subset slices are defined properly.
-            #subsets for sub_haplo_obj are working properly
-            #next, check sub_pos_diff_dict
             for subwin in range(win_num):
                 subwin_start = start + (win_size * (subwin))
                 subwin_stop = subwin_start + win_size - 1
@@ -299,7 +288,6 @@ def get_nuc_divers(path, start, stop, chr, g_table_path = '', mult_wins = False,
                 except ZeroDivisionError: #throws ZeroDivisionError when all sites in a window are transcribed
                     nuc_divers_lis.append((subwin_start, subwin_stop, n_nonTX, snp_counter, 'NA'))
             nuc_divers[win_size] = nuc_divers_lis
-            #RESULT not scaling properly
     return(nuc_divers)
 
 #function to initialize outfiles
